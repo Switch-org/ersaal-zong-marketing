@@ -3,18 +3,20 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 import {
+  checknetwork,
   sendOtp,
   verifyOtp,
   getHeApi,
-  
 } from "../apis/requests";
 import CongratsBox from "../../../public/CongratulationBox.webp";
 import Image from "next/image";
 import Link from "next/link";
 
-const UfoneLptMarketingInputAndOtp = ({
+const ZongLptMarketingInputAndOtp = ({
   decryptedMsisdn,
 }) => {
+  const appRedirectUrl =
+    "https://play.google.com/store/apps/details?id=com.ersaal.switch&hl=en";
   const searchParams = useSearchParams();
   const [number, setNumber] = useState("");
   const [otp, setOtp] = useState("");
@@ -30,6 +32,7 @@ const UfoneLptMarketingInputAndOtp = ({
   const [sendOtpToken, setSendOtpToken] = useState("");
   const [isTermsChecked, setIsTermsChecked] = useState(true);
   const [autoVerifyTriggered, setAutoVerifyTriggered] = useState(false);
+  const [checkedMsisdn, setCheckedMsisdn] = useState("");
   const ref = searchParams.get("ref") || "web";
 
   const formatDisplayNumber = (value) => {
@@ -125,6 +128,93 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
     );
   };
 
+  const getNumberLength = (value) => {
+    if (value.startsWith("92")) return 12;
+    if (value.startsWith("03")) return 11;
+    if (value.startsWith("3")) return 10;
+    return 12;
+  };
+
+  const normalizeMsisdnForCheckNetwork = (value) => {
+    const sanitizedValue = String(value || "").replace(/\D/g, "");
+
+    if (sanitizedValue.startsWith("92")) {
+      return sanitizedValue.slice(2);
+    }
+
+    if (sanitizedValue.startsWith("03")) {
+      return sanitizedValue.slice(1);
+    }
+
+    return sanitizedValue;
+  };
+
+  const triggerCheckNetwork = async (value, force = false) => {
+    const normalizedMsisdn = normalizeMsisdnForCheckNetwork(value);
+
+    if (!normalizedMsisdn || normalizedMsisdn.length !== 10) {
+      return null;
+    }
+
+    if (!force && checkedMsisdn === normalizedMsisdn) {
+      return null;
+    }
+
+    try {
+      const response = await checknetwork({ msisdn: normalizedMsisdn });
+      setCheckedMsisdn(normalizedMsisdn);
+      console.log("checknetwork response is :::", response);
+      return response;
+    } catch (error) {
+      console.log("checknetwork trigger error is :::", error);
+      return null;
+    }
+  };
+
+  const getCheckNetworkError = (response) => {
+    if (!response) {
+      return "";
+    }
+
+    if (response?.operator?.isZong === false) {
+      return "Only for Zong users";
+    }
+
+    if (response?.operator?.networkType !== "prepaid") {
+      return "Service Unavailable";
+    }
+
+    const subscription = response?.ersaalSubscription;
+    const subscriptionReason = String(subscription?.reason || "").toLowerCase();
+    const subscriptionNote = String(subscription?.note || "").toLowerCase();
+    const subscriptionMessage = String(
+      subscription?.message || response?.message || ""
+    ).toLowerCase();
+
+    const isSubscribed =
+
+      subscription?.isSubscribed === true ;
+
+    if (isSubscribed) {
+      return "Already subscribed";
+    }
+
+    return "";
+  };
+
+  const redirectToAppStore = () => {
+    window.location.href = appRedirectUrl;
+  };
+
+  const showAlreadySubscribedAndRedirect = () => {
+    setError("Already subscribed");
+    setLoading(false);
+    setSendDisabled(false);
+    setTimeout(() => {
+      redirectToAppStore();
+    }, 1500);
+  };
+
   const getHe = async () => {
     try {
       const response = await getHeApi();
@@ -164,52 +254,22 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
     };
   }, [autoVerifyTriggered, isCongrats, isOtp, number, otp]);
 
-
-  const sendUfoneOtp = async (body) => {
-    // const timeout = new Promise((resolve) =>
-    //   setTimeout(() => {
-    //     resolve({
-    //       status: true,
-    //       code: 200,
-    //       message: "OTP sent successfully",
-    //       network_type: 1,
-    //       operator: "Ufone",
-    //     }); // Default values
-    //   }, 1000)
-    // );
-
-    // const apiCall = (async () => {
-    try {
-      const response = await fetch(`https://api.jazzkidjo.com/sendOTPUfone`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-type": "application/json",
-          Authorization: "Basic S2lkam9QUk9EQVBJczoxMjNAS2lkam9QUk9E",
-          // body: JSON.stringify(body),
-        },
-        body: JSON.stringify(body),
-      });
-
-      return response.json();
-    } catch (error) {
-      console.log("send otp api error is :::", error);
+  useEffect(() => {
+    if (!isCongrats) {
+      return;
     }
-    // })();
 
-    // Use Promise.race to return the first response between the API call and the timeout
-    // return Promise.race([apiCall, timeout]);
-  };
+    const timer = setTimeout(() => {
+      redirectToAppStore();
+    }, 2000);
 
-  // console.log("headers object are :::", headers);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isCongrats]);
+
   const userSendOtp = async (number, isAutoFlow = false) => {
-    let numberLength = number.startsWith("92")
-      ? 12
-      : number.startsWith("03")
-        ? 11
-        : number.startsWith("3")
-          ? 10
-          : 12;
+    const numberLength = getNumberLength(number);
     setError("");
     setLoading(true);
     setSendDisabled(true);
@@ -228,10 +288,34 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       setSendDisabled(false);
     
     } else {
+      const checkNetworkResponse = await triggerCheckNetwork(number, true);
+
+      if (!checkNetworkResponse) {
+        setError("Unable to verify network");
+        setLoading(false);
+        setSendDisabled(false);
+        return;
+      }
+
+      const checkNetworkError = getCheckNetworkError(checkNetworkResponse);
+
+      if (checkNetworkError) {
+        if (checkNetworkError === "Already subscribed") {
+          showAlreadySubscribedAndRedirect();
+          return;
+        }
+
+        setError(checkNetworkError);
+        setLoading(false);
+        setSendDisabled(false);
+        return;
+      }
+
       let body = {
         msisdn: number,
         companyName: "web",
         package_id: 1,
+        key: ref ? ref : "web",
       };
 
       try {
@@ -271,7 +355,11 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
             setLoading(false);
             setSendDisabled(false);
           } else {
-            setError(sendOtpResponse.message=== "Already subscribed");
+            if (sendOtpResponse?.message === "Already subscribed") {
+              showAlreadySubscribedAndRedirect();
+              return;
+            }
+
             setError(sendOtpResponse.message);
             setLoading(false);
             // setTimeout(() => {
@@ -305,30 +393,16 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       setVerifyDisabled(false);
     }  else {
       let body = {
-        number: number,
+        msisdn: number,
         otp: otp,
-        // token: sendOtpToken,
+        key: ref ? ref : "web",
         package_id: 1 ,
-          // packages === "monthly"
-          //   ? "3"
-          //   : packageName === "daily"
-          //     ? "1"
-          //     : packageName === "monthly"
-          //       ? "3"
-          //       : "1",
-        // method: "web",
-        // networkType: network,
-        // channel: ref,
       };
       console.log("verify otp body is :::", body);
       try {
         const response = await verifyOtp(body);
         console.log("verify otp response is :::", response);
-        if (response.code === 200) {
-          // setIsCongrats(true);
-          // setUsername(response.data.username);
-          // setPassword(response.data.password);
-          //   setTimeout(() => {
+        if (response?.success || response?.code === 200) {
           setIsCongrats(true);
           setLoading(false);
           if (ref === "tiktok") {
@@ -338,16 +412,18 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
               send_to: "AW-17559523591/UobSCKv21cUbEIeihLVB",
             });
           }
-          //   }, 500);
           setError("");
           setVerifyDisabled(false);
         } else {
-          setError(response.message);
+          setError(response?.message || "Unable to verify OTP");
           setLoading(false);
           setVerifyDisabled(false);
         }
       } catch (error) {
         console.log("error is :::", error);
+        setError("Unable to verify OTP");
+        setLoading(false);
+        setVerifyDisabled(false);
       }
     }
   };
@@ -390,7 +466,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
               alt="congratulations"
             />
             <Link
-              href={"https://account.kidjo.tv/login"}
+              href={appRedirectUrl}
               className="mt-10 flex h-12 w-full items-center justify-center rounded-[10px] bg-[#9dd61a] text-xl font-semibold text-[#22350e] transition hover:brightness-95"
             >
               Continue
@@ -400,16 +476,16 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           <>
             {isOtp ? (
               <>
-                <div className="mx-auto w-full max-w-[370px] pt-4 md:pt-6">
-                  <h2 className="text-center text-[24px] font-semibold leading-tight text-[#2d3940] md:text-[28px]">
+                <div className="mx-auto w-full max-w-[370px] ">
+                  <h2 className="text-center text-[24px] font-semibold leading-tight text-[#263238] md:text-[28px]">
                     Verify Your Number
                   </h2>
-                  <p className="mx-auto mt-3 max-w-[280px] text-center text-[15px] leading-6 text-[#5d6970]">
-                    Please enter the 4-digit code sent to{" "}
+                  <p className="mx-auto mt-3 max-w-[280px] text-center text-[15px] leading-tight text-[#263238]">
+                    Please enter the 4-digit code sent to{" "} <br/>
                     {formatDisplayNumber(number)}.
                   </p>
 
-                  <div className="mt-10 w-full">
+                  <div className="mt-6 w-full">
                     <p className="text-center text-[15px] text-[#5d6970] md:text-base">
                       Enter <span className="font-semibold text-[#ff5b7f]">OTP</span>{" "}
                       sent to your number
@@ -434,7 +510,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
                     />
                     <label
                       htmlFor="otp-input"
-                      className="mt-5 flex cursor-text justify-center gap-3"
+                      className="mt-3 flex cursor-text justify-center gap-3"
                     >
                       {[0, 1, 2, 3].map((index) => (
                         <span
@@ -471,7 +547,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
                   Subscribe Now
                 </h2>
                 <p className="mt-1 text-center text-base text-[#5d6970]">
-                  Enjoy Zong&apos;s Premium Offers
+                
+                  Never miss what matters in your inbox.
                 </p>
 
                 <div className="mt-6 rounded-[12px] bg-white xs:bg-[#F9FBF4] px-4 py-3">
@@ -483,19 +560,17 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
                       id={"number-input"}
                       onChange={(e) => {
                         const regex = /^[0-9\b]+$/;
-                        let numberLength = e.target.value.startsWith("92")
-                          ? 12
-                          : e.target.value.startsWith("03")
-                            ? 11
-                            : e.target.value.startsWith("3")
-                              ? 10
-                              : 12;
+                        const inputValue = e.target.value;
+                        const numberLength = getNumberLength(inputValue);
                         if (
-                          e.target.value === "" ||
-                          (regex.test(e.target.value) &&
-                            e.target.value.length <= numberLength)
+                          inputValue === "" ||
+                          (regex.test(inputValue) &&
+                            inputValue.length <= numberLength)
                         ) {
-                          setNumber(e.target.value.slice(0, numberLength));
+                          const sanitizedNumber = inputValue.slice(0, numberLength);
+                          setNumber(sanitizedNumber);
+                          setCheckedMsisdn("");
+                          setError("");
                         }
                       }}
                       value={number}
@@ -564,10 +639,10 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
               </label>
             ) : null}
 
-            <p className="mt-7 text-center text-[20px] font-semibold text-[#2d3940]">
+            <p className="mt-7 text-center text-[16px] font-semibold text-[#2d3940] xs:mt-10">
              Daily Plan
             </p>
-            <p className="mt-4 text-center text-[12px]  text-[#A6A6A6]">Subscription charges: In Just Rs. 4/Day (Incl.Tax)</p>
+            <p className=" text-center text-[12px]  text-[#A6A6A6]">Subscription charges: In Just Rs. 4/Day (Incl.Tax)</p>
           </>
         )}
       </div>
@@ -578,4 +653,4 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   );
 };
 
-export default UfoneLptMarketingInputAndOtp;
+export default ZongLptMarketingInputAndOtp;

@@ -1,6 +1,26 @@
 const url = "http://nodezong.ersaal.pk";
 
 
+export const checknetwork = async (body) => {
+  try {
+    const response = await fetch(`${url}/getErsaalZongMsisdnStatus`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        "Content-type": "application/json",
+        Authorization: "Basic S2lkam9QUk9EQVBJczoxMjNAS2lkam9QUk9E",
+      },
+       body: JSON.stringify(body),
+    
+    });
+
+    return response.json();
+  } catch (error) {
+    console.log("checknetwork api error is :::", error);
+  }
+};
+ 
 export const getPackages = async () => {
   try {
     const response = await fetch(`${url}/getPackages`, {
@@ -21,26 +41,9 @@ export const getPackages = async () => {
   }
 };
 
-export const networkCheck = async (body) => {
-  try {
-    let response = await fetch(`${url}/checkNetworkAndStatus?msisdn=${body.msisdn}`, {      
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-type": "application/json",
-         Authorization: "Basic S2lkam9QUk9EQVBJczoxMjNAS2lkam9QUk9E",
-      },
-    
-    });
-    return response.json();
-  } catch (error) {
-    console.log("error is :::", error);
-  }
-};
-
 export const verifyOtp = async (body) => {
   try {
-    let response = await fetch(`${url}/verify-otp`, {
+    let response = await fetch(`${url}/verifyOtpForSubscription`, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -58,7 +61,7 @@ export const verifyOtp = async (body) => {
 
 export const sendOtp = async (body) => {
   try {
-    const response = await fetch(`${url}/subscriberFromLandingPage`, {
+    const response = await fetch(`${url}/sendOtpForSubscription`, {
       method: "POST",
       headers: {
         Accept: "application/json",
