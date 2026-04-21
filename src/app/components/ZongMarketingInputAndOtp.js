@@ -14,6 +14,7 @@ import Link from "next/link";
 
 const ZongMarketingInputAndOtp = ({
   decryptedMsisdn,
+  headerlist,
 }) => {
   const appRedirectUrl =
     "https://play.google.com/store/apps/details?id=com.ersaal.switch&hl=en";
@@ -35,6 +36,8 @@ const ZongMarketingInputAndOtp = ({
   const [checkedMsisdn, setCheckedMsisdn] = useState("");
   const ref = searchParams.get("ref") || "web";
 
+
+  console.log("headerlist is :::", headerlist);
   const formatDisplayNumber = (value) => {
     const rawNumber = String(value || "").replace(/\D/g, "");
 
@@ -55,13 +58,13 @@ const ZongMarketingInputAndOtp = ({
 
   
 
-  const tiktokUfoneScript = `!function (w, d, t) {
+  const tiktokZongScript = `!function (w, d, t) {
   w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
 var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
 ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
 
 
-  ttq.load('CSVHLBBC77UDA0827J80');
+  ttq.load('D7GD8PRC77U02GBEE2K0');
   ttq.page();
 }(window, document, 'ttq');`;
 
@@ -94,7 +97,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
     // } else {
     if (ref === "tiktok") {
       const script = document.createElement("script");
-      script.innerHTML = tiktokUfoneScript;
+      script.innerHTML = tiktokZongScript;
       document.head.appendChild(script);
       // }
     } else {
@@ -143,6 +146,22 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
     }
 
     if (sanitizedValue.startsWith("03")) {
+      return sanitizedValue.slice(1);
+    }
+
+    return sanitizedValue;
+  };
+
+  const normalizeDisplayNumber = (value) => {
+    const sanitizedValue = String(value || "").replace(/\D/g, "");
+
+    // Remove 92 prefix (country code)
+    if (sanitizedValue.startsWith("92")) {
+      return sanitizedValue.slice(2);
+    }
+
+    // Remove leading 0
+    if (sanitizedValue.startsWith("0")) {
       return sanitizedValue.slice(1);
     }
 
@@ -213,8 +232,9 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       if (response?.status === 200 && response?.data) {
         const heNumber = String(response.data);
         console.log("number is ::", heNumber);
-        setNumber(heNumber);
-        userSendOtp(heNumber, true);
+        const cleanNumber = normalizeDisplayNumber(heNumber);
+        setNumber(cleanNumber);
+        userSendOtp(cleanNumber, true);
       }
     } catch (error) {
       console.log("error is ::", error);
@@ -224,8 +244,9 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   useEffect(() => {
     if (decryptedMsisdn) {
       const headerNumber = String(decryptedMsisdn);
-      setNumber(headerNumber);
-      userSendOtp(headerNumber, true);
+      const cleanNumber = normalizeDisplayNumber(headerNumber);
+      setNumber(cleanNumber);
+      userSendOtp(cleanNumber, true);
     } else {
       getHe();
     }
@@ -428,7 +449,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
                 Congratulations!
               </h2>
               <p className="mt-3 text-center text-[14px] leading-6 text-[#8d959b] md:text-base">
-                You&apos;ve successfully subscribed with Ersaal Pro
+                You&apos;ve successfully subscribed with Ersaal Hub
               </p>
             </div>
             <Image
@@ -604,7 +625,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
                   <Link
                     href={"/terms"}
                     target="_blank"
-                    className="font-medium text-[#ff4770]"
+                    className="font-medium text-[#FF3378]"
                   >
                     Terms and Conditions.
                   </Link>

@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { headers } from "next/headers";
+import crypto from "crypto";
 
 const ZongMarketingInputAndOtp = dynamic(
   () => import("../components/ZongMarketingInputAndOtp"),
@@ -9,30 +10,30 @@ const ZongMarketingInputAndOtp = dynamic(
   }
 );
 
-import { rc4 } from "../lib/rc4";
-import crypto from "crypto";
-
 export const metadata = {
   title: "Zong Ersaal",
   description: "A Zong Ersaal Application",
 };
 
-export function decryptMsisdn(encryptedMsisdn, password) {
+const ZONG_AES_KEY = "ersaal@1232";
+
+export function decryptMsisdn(encryptedMsisdn, key = ZONG_AES_KEY) {
   try {
     const decoded = Buffer.from(encryptedMsisdn, "base64");
-
-    // MD5 hash the password
-    const md5Password = crypto
-      .createHash("md5")
-      .update(password)
-      .digest("binary");
-
-    // Decrypt using RC4
-    const decrypted = rc4(md5Password, decoded);
+    const keyBuffer = Buffer.alloc(16);
+    Buffer.from(key, "utf8").copy(keyBuffer, 0, 0, 16);
+    const iv = Buffer.alloc(16, 0);
+    const decipher = crypto.createDecipheriv("aes-128-cbc", keyBuffer, iv);
+    decipher.setAutoPadding(false);
+    const decrypted = Buffer.concat([
+      decipher.update(decoded),
+      decipher.final(),
+    ]);
+    const cleaned = decrypted.toString("utf8").replace(/\0+$/g, "");
 
     console.log("Decrypted data:", decrypted);
 
-    return decrypted.toString("utf8");
+    return cleaned;
   } catch (err) {
     console.error("Decryption failed:", err.message);
     return "";
@@ -55,7 +56,7 @@ export default async function home() {
  const headersX = await headers();
   const headersObj = getHeaders(headersX);
   const decryptedMsisdn = headersObj["msisdn"]
-    ? decryptMsisdn(headersObj["msisdn"], "KidJo123@Ufone")
+    ? decryptMsisdn(headersObj["msisdn"])
     : null;
 
   console.log("decrypted msisdn is :::", decryptedMsisdn);
@@ -79,7 +80,7 @@ export default async function home() {
 
           <div className="pointer-events-none mt-8 hidden justify-center md:mt-14 md:flex">
             <Image
-              src="/mobile.png"
+              src="/mobile.webp"
               alt="Hero Image"
               width={600}
               height={600}
@@ -103,7 +104,7 @@ export default async function home() {
           </div>
 
           <div className="mt-40 w-full max-w-[500px] xs:mt-10 xs:mx-w-auto md:mt-0 md:pt-32">
-            <ZongMarketingInputAndOtp decryptedMsisdn={decryptedMsisdn} />
+            <ZongMarketingInputAndOtp decryptedMsisdn={decryptedMsisdn} headerlist={headersX} />
           </div>
         </div>
       </section>
