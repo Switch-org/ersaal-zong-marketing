@@ -1,8 +1,8 @@
 import React from "react";
 
 export const metadata = {
-  title: "Jazz Kidjo",
-  description: "A Jazz Kidjo Application",
+  title: "Zong Ersaal Privacy Policy",
+  description: "A Zong Ersaal Application",
 };
 
 export default function Page() {
@@ -10,11 +10,11 @@ export default function Page() {
     <>
       <main className="max-w-[90%] mx-auto p-6 xs:p-4 text-gray-800 leading-relaxed">
         <h1 className="text-3xl xs:text-xl text-center font-bold text-skyBlue mb-8 mt-4">
-          Jazz Kidjo – Privacy Policy (Pakistan)
+          Ersaal Hub  – Privacy Policy (Pakistan)
         </h1>
 
         <p className="mb-4">
-          At <strong>Jazz Kidjo</strong>, your family’s privacy and trust are our top priority.
+          At <strong>Ersaal Hub</strong>, your family’s privacy and trust are our top priority.
           We are committed to handling your personal information responsibly, securely,
           and transparently. This Privacy Policy (“Policy”) explains how we collect, use,
           and protect your information when you use the Jazz Kidjo app and related services (“Service”).

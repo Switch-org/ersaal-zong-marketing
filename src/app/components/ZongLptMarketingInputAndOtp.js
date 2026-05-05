@@ -34,6 +34,7 @@ const ZongLptMarketingInputAndOtp = ({
   const [sendOtpToken, setSendOtpToken] = useState("");
   const [isTermsChecked, setIsTermsChecked] = useState(true);
   const [autoVerifyTriggered, setAutoVerifyTriggered] = useState(false);
+  const [pendingAutoVerifyOtp, setPendingAutoVerifyOtp] = useState("");
   const [checkedMsisdn, setCheckedMsisdn] = useState("");
   const ref = searchParams.get("ref") || "web";
 
@@ -71,9 +72,9 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'AW-17559523591');`;
+  gtag('config', 'AW-18138797335');`;
 
-  const gtagZongSource = `https://www.googletagmanager.com/gtag/js?id=AW-17559523591`;
+  const gtagZongSource = `https://www.googletagmanager.com/gtag/js?id=AW-18138797335`;
 
   useEffect(() => {
     let timer;
@@ -106,6 +107,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         const gtag = document.createElement("script");
         gtag.innerHTML = gtagScriptZong;
         document.head.appendChild(gtag);
+        console.log("gtag script added :::::", gtagScriptZong);
       }
     }
     }, []);
@@ -258,19 +260,24 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   }, []);
 
   useEffect(() => {
-    if (!isOtp || isCongrats || otp.length !== 4 || autoVerifyTriggered) {
+    if (
+      !isOtp ||
+      isCongrats ||
+      pendingAutoVerifyOtp.length !== 4 ||
+      autoVerifyTriggered
+    ) {
       return;
     }
 
     const timer = setTimeout(() => {
       setAutoVerifyTriggered(true);
-      userVerifyOtp(number, otp);
+      userVerifyOtp(number, pendingAutoVerifyOtp);
     }, 4000);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [autoVerifyTriggered, isCongrats, isOtp, number, otp]);
+  }, [autoVerifyTriggered, isCongrats, isOtp, number, pendingAutoVerifyOtp]);
 
   useEffect(() => {
     if (!isCongrats) {
@@ -342,6 +349,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         if (sendOtpResponse?.success || sendOtpResponse?.code === 200) {
           setIsOtp(true);
           setAutoVerifyTriggered(false);
+          setPendingAutoVerifyOtp("");
           setLoading(false);
           setNetwork(sendOtpResponse?.network_type === 1 ? "Prepaid" : "");
           setSendDisabled(false);
@@ -351,7 +359,9 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           setSendOtpToken(sendOtpResponse?.token || "");
           const returnedOtp = getOtpFromResponse(sendOtpResponse);
           if (returnedOtp) {
-            setOtp(String(returnedOtp).slice(0, 4));
+            const autofilledOtp = String(returnedOtp).slice(0, 4);
+            setOtp(autofilledOtp);
+            setPendingAutoVerifyOtp(autofilledOtp);
           } else if (!isAutoFlow) {
             setOtp("");
           }
@@ -427,7 +437,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
             window.ttq?.track("Subscribe");
           } else if (ref === "inhousegoogle") {
             gtag("event", "conversion", {
-              send_to: "AW-17559523591/UobSCKv21cUbEIeihLVB",
+              send_to: "AW-18138797335/B_WgCNq0qKccEJeqoMlD",
             });
           }
           setError("");
