@@ -2,6 +2,8 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { headers } from "next/headers";
 import crypto from "crypto";
+import { useEffect } from "react";
+import { initAnalytics } from "@/utils/firebase";
 
 const ZongLptMarketingInputAndOtp = dynamic(
   () => import("../components/ZongLptMarketingInputAndOtp"),
@@ -53,7 +55,7 @@ const getHeaders = (headersX) => {
 
 
 export default async function home() {
- const headersX = await headers();
+  const headersX = await headers();
   const headersObj = getHeaders(headersX);
   const decryptedMsisdn = headersObj["msisdn"]
     ? decryptMsisdn(headersObj["msisdn"])
@@ -62,7 +64,9 @@ export default async function home() {
   console.log("decrypted msisdn is :::", decryptedMsisdn);
   console.log("headers are :::", headersObj);
 
-
+  useEffect(() => {
+    initAnalytics()
+  }, [])
 
 
   return (

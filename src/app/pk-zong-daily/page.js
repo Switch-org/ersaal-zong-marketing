@@ -2,6 +2,8 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { headers } from "next/headers";
 import crypto from "crypto";
+import { useEffect } from "react";
+import { initAnalytics } from "@/utils/firebase";
 
 const ZongMarketingInputAndOtp = dynamic(
   () => import("../components/ZongMarketingInputAndOtp"),
@@ -62,8 +64,9 @@ export default async function home() {
   console.log("decrypted msisdn is :::", decryptedMsisdn);
   console.log("headers are :::", headersObj);
 
-
-
+  useEffect(()=>{
+    initAnalytics()
+  },[])
 
   return (
     <main className="h-[100svh] overflow-hidden font-sans md:h-auto md:overflow-visible">
