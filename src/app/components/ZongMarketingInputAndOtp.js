@@ -572,7 +572,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
                     />
                     <span className="ml-auto">
                       <Image
-                        src="/zonglogo.svg"
+                        src="/zonglogo1.webp"
                         width={100}
                         height={100}
                         alt="zongLogoInline"
