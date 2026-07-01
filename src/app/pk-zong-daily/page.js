@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { headers } from "next/headers";
 import crypto from "crypto";
+import AnalyticsTracker from "../components/AnalyticsTracker";
 
 const ZongMarketingInputAndOtp = dynamic(
   () => import("../components/ZongMarketingInputAndOtp"),
@@ -63,10 +64,9 @@ export default async function home() {
   console.log("headers are :::", headersObj);
 
 
-
-
   return (
     <main className="h-[100svh] overflow-hidden font-sans md:h-auto md:overflow-visible">
+      <AnalyticsTracker />
       <section className="mx-auto grid  xs:min-h-screen w-full grid-cols-1 gap-4 overflow-hidden bg-white p-0 shadow-sm xs:relative xs:gap-0 xs:bg-[#d9e4c5] xs:px-3 md:min-h-screen md:h-auto md:grid-cols-[1fr_1.5fr] md:gap-7 md:overflow-visible md:bg-white md:p-4">
         <div className="relative overflow-hidden bg-[#d9e4c5] px-5 xs:bg-transparent xs:px-0 xs:pb-0 xs:pt-0 md:rounded-[22px] md:px-10 md:pb-10 md:pt-12">
           <div className="z-10 flex flex-col items-center justify-center text-center xs:hidden">
