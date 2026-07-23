@@ -12,7 +12,7 @@ import CongratsBox from "../../../public/CongratulationBox.webp";
 import Image from "next/image";
 import Link from "next/link";
 
-const ZongLptMarketingInputAndOtp = ({
+const ZongLpMarketingInputAndOtp = ({
   decryptedMsisdn,
   headerlist,
 }) => {
@@ -33,8 +33,6 @@ const ZongLptMarketingInputAndOtp = ({
   const [resendStatus, setResendStatus] = useState(false);
   const [sendOtpToken, setSendOtpToken] = useState("");
   const [isTermsChecked, setIsTermsChecked] = useState(true);
-  const [autoVerifyTriggered, setAutoVerifyTriggered] = useState(false);
-  const [pendingAutoVerifyOtp, setPendingAutoVerifyOtp] = useState("");
   const [checkedMsisdn, setCheckedMsisdn] = useState("");
   const ref = searchParams.get("ref") || "web";
 
@@ -260,26 +258,6 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   }, []);
 
   useEffect(() => {
-    if (
-      !isOtp ||
-      isCongrats ||
-      pendingAutoVerifyOtp.length !== 4 ||
-      autoVerifyTriggered
-    ) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setAutoVerifyTriggered(true);
-      userVerifyOtp(number, pendingAutoVerifyOtp);
-    }, 6000);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [autoVerifyTriggered, isCongrats, isOtp, number, pendingAutoVerifyOtp]);
-
-  useEffect(() => {
     if (!isCongrats) {
       return;
     }
@@ -348,8 +326,6 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         console.log("send otp response is :::", sendOtpResponse);
         if (sendOtpResponse?.success || sendOtpResponse?.code === 200) {
           setIsOtp(true);
-          setAutoVerifyTriggered(false);
-          setPendingAutoVerifyOtp("");
           setLoading(false);
           setNetwork(sendOtpResponse?.network_type === 1 ? "Prepaid" : "");
           setSendDisabled(false);
@@ -361,7 +337,6 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           if (returnedOtp) {
             const autofilledOtp = String(returnedOtp).slice(0, 4);
             setOtp(autofilledOtp);
-            setPendingAutoVerifyOtp(autofilledOtp);
           } else if (!isAutoFlow) {
             setOtp("");
           }
@@ -371,7 +346,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           setLoading(false);
           setSendDisabled(false);
         } else {
-          console.log("hello world awais");
+    
           if (sendOtpResponse.message === "Only for Ufone users!") {
             setError(sendOtpResponse.message);
             setLoading(false);
@@ -408,7 +383,6 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   console.log("ref is :::", ref);
 
   const userVerifyOtp = async (number, otp) => {
-    setAutoVerifyTriggered(true);
     setLoading(true);
     setVerifyDisabled(true);
     if (otp.length < 4) {
@@ -437,7 +411,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
             window.ttq?.track("Subscribe");
           } else if (ref === "inhousegoogle") {
             gtag("event", "conversion", {
-              send_to: "AW-18138797335/B_WgCNq0qKccEJeqoMlD",
+              send_to: "AW-18138797335/NrYzCK_vjNUcEJeqoMlD",
             });
           }
           setError("");
@@ -681,4 +655,4 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   );
 };
 
-export default ZongLptMarketingInputAndOtp;
+export default ZongLpMarketingInputAndOtp;
